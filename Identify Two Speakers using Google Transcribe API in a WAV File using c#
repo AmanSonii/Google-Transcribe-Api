@@ -1,0 +1,55 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Text;
+using System.Threading.Tasks;
+
+
+namespace Trying_to_Identify_two_speakers
+{
+    class IdentifySpeakers
+    {
+        public static void IdentifySpeaker(string fileName)
+        {
+            ASCIIEncoding encoding = new ASCIIEncoding();
+  
+            // Convert the WAV FILE to bytes so that further it can be converted into base64 string
+            byte[] fileData = File.ReadAllBytes(localFilePath);
+            
+            // Convert bytes into base64 string
+            string base64 = Convert.ToBase64String(fileData);
+         
+            // create data to post on API. 
+            // NOTE it is for wav file less than 1 minute.
+            string post = "{\"config\": {\"diarizationSpeakerCount\": 2,\"enableSpeakerDiarization\": true,\"encoding\": \"LINEAR16\",\"languageCode\":\"en-us\",\"enableAutomaticPunctuation\": true,\"useEnhanced\": true},\"audio\":{\"content\":\"" + base64 + "\" }    }";
+
+            // Again convert post data into bytes to post it with httpwebrequest
+            byte[] data = encoding.GetBytes(post);
+           
+            // Create Httpwebrequest for API reuqest
+            HttpWebRequest re = (HttpWebRequest)System.Net.HttpWebRequest.Create("https://speech.googleapis.com/v1p1beta1/speech:longrunningrecognize?key=" + yourAPIKEY);
+            re.ContentLength = data.Length;
+            re.UseDefaultCredentials = true;
+            re.Method = "POST";
+            re.Accept = " application/json";
+            re.ContentType = " application/json";
+            Stream srr = re.GetRequestStream();
+            srr.Write(data, 0, data.Length);
+            srr.Close();
+            string txtHTML = "";
+            HttpWebResponse res = (HttpWebResponse)re.GetResponse();
+            HttpWebResponse objResponse = (HttpWebResponse)re.GetResponse();
+
+            using (StreamReader sr =
+                       new StreamReader(objResponse.GetResponseStream()))
+            {
+                txtHTML = sr.ReadToEnd();
+                sr.Close();
+            }
+             // txt HTML will contain the required DATA.
+             // NOTE in this json data two speakers can be identified with the speaker tag field 
+     }
+  }
+}
